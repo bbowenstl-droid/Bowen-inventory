@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#657044" />
+  <title>Bowen Inventory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="brand-mark">B<span class="brand-bubble"></span></div>
+        <div>
+          <div class="brand-name">BOWEN // INVENTORY</div>
+          <div class="brand-sub">HOME STORAGE MANAGEMENT // BIKINI BOTTOM EDITION</div>
+        </div>
+      </div>
+
+      <nav class="nav-list">
+        <button class="nav-item active" data-view="dashboard">▦ <span>Dashboard</span></button>
+        <button class="nav-item" data-view="containers">▣ <span>Containers</span></button>
+        <button class="nav-item" data-view="inventory">≡ <span>Inventory</span></button>
+        <button class="nav-item" data-view="locations">⌖ <span>Locations</span></button>
+        <button class="nav-item" data-view="activity">↻ <span>Activity</span></button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-status"><span class="status-dot"></span> SYSTEM ONLINE</div>
+        <div class="version">v0.2 olive edition</div>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">WAREHOUSE CONSOLE</div>
+          <h1 id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="topbar-actions"><div class="ready-badge">I'M READY!</div>
+          <button class="btn btn-ghost" id="exportBtn">Export</button>
+          <button class="btn btn-primary" id="newContainerBtn">+ New Container</button>
+        </div>
+      </header>
+
+      <section class="hero-search">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input id="globalSearch" type="search" placeholder="Search containers, items, locations, notes..." autocomplete="off" />
+          <kbd>⌘ K</kbd>
+        </div>
+        <button class="scan-btn" id="scanBtn"><span class="scan-spark">✦</span> <span>SCAN / OPEN CODE</span></button>
+      </section>
+
+      <section id="dashboardView" class="view active-view">
+        <div class="sea-flower flower-one"></div><div class="sea-flower flower-two"></div>
+        <div class="stat-grid">
+          <article class="stat-card"><div class="stat-label">ACTIVE CONTAINERS</div><div class="stat-value" id="containerCount">0</div><div class="stat-meta">tracked units</div></article>
+          <article class="stat-card"><div class="stat-label">TOTAL ITEMS</div><div class="stat-value" id="itemCount">0</div><div class="stat-meta">individual records</div></article>
+          <article class="stat-card"><div class="stat-label">LOCATIONS</div><div class="stat-value" id="locationCount">0</div><div class="stat-meta">storage zones</div></article>
+          <article class="stat-card alert-card"><div class="stat-label">NEEDS AUDIT</div><div class="stat-value" id="auditCount">0</div><div class="stat-meta">90+ days since check</div></article>
+        </div>
+
+        <div class="dashboard-grid">
+          <section class="panel">
+            <div class="panel-head"><div><div class="eyebrow">LIVE INVENTORY</div><h2>Recently Updated <span class="tiny-bubble">°</span></h2></div><button class="text-btn" data-viewjump="containers">VIEW ALL →</button></div>
+            <div id="recentContainers" class="container-list"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><div><div class="eyebrow">SYSTEM LOG</div><h2>Recent Activity</h2></div></div>
+            <div id="recentActivity" class="activity-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="containersView" class="view">
+        <div class="panel">
+          <div class="panel-head"><div><div class="eyebrow">ASSET REGISTER</div><h2>Containers</h2></div><div class="filter-row"><select id="locationFilter"><option value="">All Locations</option></select><select id="typeFilter"><option value="">All Types</option><option>Tote</option><option>Box</option><option>Bin</option><option>Drawer</option><option>Cabinet</option></select></div></div>
+          <div id="containerTableWrap"></div>
+        </div>
+      </section>
+
+      <section id="inventoryView" class="view">
+        <div class="panel">
+          <div class="panel-head"><div><div class="eyebrow">STOCK REGISTER</div><h2>All Inventory</h2></div></div>
+          <div id="inventoryTableWrap"></div>
+        </div>
+      </section>
+
+      <section id="locationsView" class="view">
+        <div class="panel">
+          <div class="panel-head"><div><div class="eyebrow">STORAGE MAP</div><h2>Locations</h2></div></div>
+          <div id="locationCards" class="location-grid"></div>
+        </div>
+      </section>
+
+      <section id="activityView" class="view">
+        <div class="panel">
+          <div class="panel-head"><div><div class="eyebrow">AUDIT TRAIL</div><h2>Activity Log</h2></div></div>
+          <div id="activityFull" class="activity-list"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="containerModal">
+    <div class="modal">
+      <button class="modal-close" data-close="containerModal">×</button>
+      <div class="eyebrow">CREATE ASSET</div>
+      <h2>New Container</h2>
+      <form id="containerForm" class="form-grid">
+        <label>Container Name<input name="name" required placeholder="Christmas Decorations" /></label>
+        <label>Type<select name="type"><option>Tote</option><option>Box</option><option>Bin</option><option>Drawer</option><option>Cabinet</option></select></label>
+        <label>Location<input name="location" required placeholder="Garage / Rack A / Shelf 2" /></label>
+        <label>Category<input name="category" placeholder="Holiday" /></label>
+        <label class="full">Notes<textarea name="notes" rows="3" placeholder="Optional notes..."></textarea></label>
+        <button class="btn btn-primary full" type="submit">Create Container</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="detailModal">
+    <div class="modal modal-wide">
+      <button class="modal-close" data-close="detailModal">×</button>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="scanModal">
+    <div class="modal small-modal">
+      <button class="modal-close" data-close="scanModal">×</button>
+      <div class="eyebrow">QUICK ACCESS</div>
+      <h2>Open Container</h2>
+      <p class="muted">Type the code printed under the QR label.</p>
+      <form id="scanForm">
+        <input class="big-code-input" name="code" placeholder="BIN-001" autocomplete="off" />
+        <button class="btn btn-primary full-width" type="submit">Open Container</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
