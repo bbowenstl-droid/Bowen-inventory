@@ -11,7 +11,25 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app-shell">
+  <section class="auth-screen" id="authScreen">
+    <div class="auth-card">
+      <div class="auth-logo">B<span class="brand-bubble"></span></div>
+      <div class="eyebrow">SECURE FAMILY ACCESS</div>
+      <h1>BOWEN // INVENTORY</h1>
+      <p class="muted">Sign in to access the shared home inventory system.</p>
+      <form id="loginForm" class="auth-form">
+        <label>Email<input name="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+        <label>Password<input name="password" type="password" autocomplete="current-password" required placeholder="••••••••"></label>
+        <button class="btn btn-primary full-width" type="submit" id="loginBtn">SIGN IN</button>
+        <div class="auth-error" id="authError"></div>
+      </form>
+      <div class="auth-foot">AUTHORIZED FAMILY USERS ONLY <span class="tiny-bubble">°</span></div>
+    </div>
+  </section>
+
+  <div class="loading-screen" id="loadingScreen"><div class="loader-ring"></div><div>LOADING INVENTORY...</div></div>
+
+  <div class="app-shell app-hidden" id="appShell">
     <aside class="sidebar">
       <div class="brand-block">
         <div class="brand-mark">B<span class="brand-bubble"></span></div>
@@ -42,7 +60,9 @@
           <h1 id="pageTitle">Dashboard</h1>
         </div>
         <div class="topbar-actions"><div class="ready-badge">I'M READY!</div>
+          <div class="user-chip"><span class="status-dot"></span><span id="userEmail">SIGNED IN</span></div>
           <button class="btn btn-ghost" id="exportBtn">Export</button>
+          <button class="btn btn-ghost" id="signOutBtn">Sign Out</button>
           <button class="btn btn-primary" id="newContainerBtn">+ New Container</button>
         </div>
       </header>
@@ -94,7 +114,7 @@
 
       <section id="locationsView" class="view">
         <div class="panel">
-          <div class="panel-head"><div><div class="eyebrow">STORAGE MAP</div><h2>Locations</h2></div></div>
+          <div class="panel-head"><div><div class="eyebrow">STORAGE MAP</div><h2>Locations</h2></div><button class="btn btn-primary" id="newLocationBtn">+ New Location</button></div>
           <div id="locationCards" class="location-grid"></div>
         </div>
       </section>
@@ -116,8 +136,8 @@
       <form id="containerForm" class="form-grid">
         <label>Container Name<input name="name" required placeholder="Christmas Decorations" /></label>
         <label>Type<select name="type"><option>Tote</option><option>Box</option><option>Bin</option><option>Drawer</option><option>Cabinet</option></select></label>
-        <label>Location<input name="location" required placeholder="Garage / Rack A / Shelf 2" /></label>
-        <label>Category<input name="category" placeholder="Holiday" /></label>
+        <label>Location<select name="location_id" id="containerLocation" required></select></label>
+        <label>Storage Position<input name="storage_position" placeholder="Rack A / Shelf 2" /></label>
         <label class="full">Notes<textarea name="notes" rows="3" placeholder="Optional notes..."></textarea></label>
         <button class="btn btn-primary full" type="submit">Create Container</button>
       </form>
@@ -145,6 +165,8 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

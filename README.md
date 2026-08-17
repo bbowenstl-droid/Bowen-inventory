@@ -1,34 +1,35 @@
-# Bowen Inventory
+# Bowen Inventory v0.3 — Shared Family Edition
 
-A mobile-friendly home inventory / container tracking prototype designed to feel like a real warehouse management system.
+A phone-friendly family storage inventory system styled like a warehouse management console, with the Olive / Bikini Bottom theme.
 
-## What works now
-- Dashboard with container, inventory, location, and audit counts
-- Containers with permanent IDs such as `TOTE-001`
-- Items and quantities inside each container
-- Search across container names, IDs, locations, notes, and item names
-- QR label generation for each container
-- QR URLs automatically open the correct container via `?bin=TOTE-001`
-- Audit logging
-- Activity history
-- Location rollups
-- JSON export
-- Responsive phone layout
-- Data saved in the browser with `localStorage`
+## Live-data architecture
+- GitHub Pages hosts the frontend.
+- Supabase Auth handles family sign-in.
+- Supabase Postgres stores locations, containers, items, and activity history.
+- Row Level Security limits database access to authenticated users.
+- QR labels point back to permanent container codes such as `TOTE-001`.
 
-## Put it on GitHub Pages
-1. Create a new GitHub repository, for example `bowen-inventory`.
-2. Upload `index.html`, `styles.css`, and `app.js` to the repository root.
-3. In GitHub: **Settings → Pages**.
-4. Under **Build and deployment**, choose **Deploy from a branch**.
-5. Select your main branch and `/ (root)`, then save.
-6. Open the GitHub Pages URL.
+## Files to upload to GitHub
+Upload/replace these files in the repository root:
+- `index.html`
+- `styles.css`
+- `app.js`
+- `config.js`
+- `README.md`
 
-## Important limitation of this prototype
-The current version stores data in the browser. That means your phone and another family member's phone will NOT automatically share the same inventory yet.
+## What works in v0.3
+- Email/password sign-in for existing Supabase users
+- Shared inventory across phones/computers
+- Locations stored in Supabase
+- Create containers with permanent codes
+- Add/remove inventory items and quantities
+- Global search
+- Container audit timestamps
+- Activity history with the signed-in user's email
+- QR code generation and direct container URLs
+- Printable QR labels
+- JSON backup export
+- Sign out
 
-The next production step is replacing localStorage with Supabase so the entire family shares one live database and can sign in.
-
-
-## Theme
-Version 0.2 uses an olive-green warehouse theme with subtle SpongeBob/Bikini Bottom-inspired yellow, aqua, bubble, and flower accents while keeping the inventory UI professional.
+## Security note
+`config.js` contains only the Supabase Project URL and publishable frontend key. This key is designed to be used in browser applications. Database protection comes from the Row Level Security policies configured in Supabase. Never put a Supabase secret/service-role key or database password in this repository.
