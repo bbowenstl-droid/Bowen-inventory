@@ -187,12 +187,29 @@ $('#containerForm').onsubmit=async e=>{
   await addLog('CONTAINER CREATED', `${code} · ${data.name}`, data.id); e.target.reset(); $('#containerModal').classList.remove('open'); await loadAll(); openContainer(data.id);
 };
 
+function makeLocationCode(name){
+  const cleaned=String(name||'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').trim();
+  const words=cleaned.split(/\s+/).filter(Boolean);
+  let base='LOC';
+  if(words.length>=2) base=(words[0].slice(0,2)+words[1].slice(0,2)).slice(0,4);
+  else if(words.length===1) base=words[0].slice(0,4);
+  if(base.length<3) base=(base+'LOC').slice(0,3);
+  const used=new Set(db.locations.map(l=>String(l.code||'').toUpperCase()));
+  if(!used.has(base)) return base;
+  let n=2; while(used.has(`${base}${n}`)) n++;
+  return `${base}${n}`;
+}
+
 $('#newLocationBtn').onclick=async()=>{
-  const name=prompt('New location name (example: Garage Attic):'); if(!name?.trim())return;
-  const code=prompt('Short location code (example: GAT):')?.trim().toUpperCase() || null;
-  showLoading(true); const {data,error}=await client.from('locations').insert({name:name.trim(),code,description:'Family storage location'}).select().single();
+  const name=prompt('Location name (example: Garage Attic):'); if(!name?.trim())return;
+  const trimmed=name.trim();
+  const existing=db.locations.find(l=>String(l.name).trim().toLowerCase()===trimmed.toLowerCase());
+  if(existing){ alert(`${existing.name} already exists${existing.code?` (${existing.code})`:''}.`); return; }
+  const code=makeLocationCode(trimmed);
+  showLoading(true);
+  const {data,error}=await client.from('locations').insert({name:trimmed,code,description:'Family storage location'}).select().single();
   if(error){showLoading(false);return errorMessage(error)}
-  await addLog('LOCATION CREATED', `${data.name}${data.code?` (${data.code})`:''}`); await loadAll();
+  await addLog('LOCATION CREATED', `${data.name} (${data.code})`); await loadAll();
 };
 
 $('#scanForm').onsubmit=e=>{e.preventDefault();const code=String(new FormData(e.target).get('code')).trim().toUpperCase();$('#scanModal').classList.remove('open');openContainerByCode(code)};
