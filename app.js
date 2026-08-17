@@ -230,3 +230,67 @@ document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap')&&!e.t
 document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#globalSearch').focus()}if(e.key==='Escape')$$('.modal-backdrop').forEach(m=>m.classList.remove('open'))});
 client.auth.onAuthStateChange((_event,session)=>{sessionUser=session?.user||null;});
 boot();
+
+// ============================================================
+// v0.5 INSTALLABLE APP / PWA
+// ============================================================
+let deferredInstallPrompt = null;
+const installBanner = document.getElementById('installBanner');
+const installAppBtn = document.getElementById('installAppBtn');
+const dismissInstallBtn = document.getElementById('dismissInstallBtn');
+const installModal = document.getElementById('installModal');
+
+const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+function maybeShowInstallBanner(){
+  if(!installBanner || isStandalone()) return;
+  if(localStorage.getItem('bowen_install_dismissed') === '1') return;
+  installBanner.hidden = false;
+}
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  maybeShowInstallBanner();
+});
+
+if(installAppBtn){
+  installAppBtn.addEventListener('click', async () => {
+    if(deferredInstallPrompt){
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installBanner.hidden = true;
+      return;
+    }
+    if(isIOS() && installModal){
+      installModal.classList.add('open');
+      return;
+    }
+    if(installModal) installModal.classList.add('open');
+  });
+}
+
+if(dismissInstallBtn){
+  dismissInstallBtn.addEventListener('click', () => {
+    localStorage.setItem('bowen_install_dismissed','1');
+    installBanner.hidden = true;
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  if(installBanner) installBanner.hidden = true;
+  localStorage.setItem('bowen_install_dismissed','1');
+});
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js?v=0.5.0').catch(err => console.warn('Service worker registration failed', err));
+  });
+}
+
+// iOS does not fire beforeinstallprompt, so offer the in-app guide after load.
+window.addEventListener('load', () => {
+  if(isIOS()) setTimeout(maybeShowInstallBanner, 1200);
+});

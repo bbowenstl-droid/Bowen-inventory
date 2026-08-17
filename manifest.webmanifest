@@ -1,0 +1,18 @@
+{
+  "name": "Bowen Inventory",
+  "short_name": "Inventory",
+  "description": "Bowen family home inventory and QR container tracking system.",
+  "id": "/Bowen-inventory/",
+  "start_url": "/Bowen-inventory/",
+  "scope": "/Bowen-inventory/",
+  "display": "standalone",
+  "display_override": ["standalone"],
+  "orientation": "portrait-primary",
+  "background_color": "#151b11",
+  "theme_color": "#657044",
+  "icons": [
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png"},
+    {"src":"icons/icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ]
+}
