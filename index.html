@@ -10,15 +10,15 @@
   <meta name="apple-mobile-web-app-title" content="Bowen Inventory" />
   <meta name="application-name" content="Bowen Inventory" />
   <meta name="description" content="Bowen family home inventory and QR container tracking system." />
-  <link rel="manifest" href="manifest.webmanifest?v=0.6.0" />
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=0.6.0" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=0.6.0" />
+  <link rel="manifest" href="manifest.webmanifest?v=0.7.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png?v=0.7.0" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=0.7.0" />
   <title>Bowen Inventory</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <style>.app-hidden{display:none!important}.auth-screen{position:fixed;inset:0;display:none;z-index:9998}.auth-screen.show{display:flex}.loading-screen{position:fixed;inset:0;display:none;z-index:10000}.loading-screen.show{display:flex}</style>
-  <link rel="stylesheet" href="styles.css?v=0.6.0" />
+  <link rel="stylesheet" href="styles.css?v=0.7.0" />
 </head>
 <body>
   <section class="auth-screen" id="authScreen">
@@ -37,7 +37,7 @@
     </div>
   </section>
 
-  <div class="loading-screen" id="loadingScreen"><div class="gary-loader"><span class="gary-shell">◉</span><span class="gary-body">〰</span></div><div id="loadingText">MEOW... RETRIEVING INVENTORY</div></div>
+  <div class="loading-screen" id="loadingScreen"><div class="gary-loader"><img src="assets/characters/gary.png" alt="Gary the Snail"></div><div id="loadingText">MEOW... RETRIEVING INVENTORY</div></div>
 
   <div class="app-shell app-hidden" id="appShell">
     <aside class="sidebar">
@@ -59,7 +59,7 @@
 
       <div class="sidebar-footer">
         <div class="system-status"><span class="status-dot"></span> SYSTEM ONLINE</div>
-        <div class="version">v0.6 bikini bottom ops</div>
+        <div class="version">v0.7 character crew</div>
       </div>
     </aside>
 
@@ -88,11 +88,15 @@
 
       <section id="dashboardView" class="view active-view">
         <div class="sea-flower flower-one"></div><div class="sea-flower flower-two"></div>
+        <section class="character-command">
+          <div class="character-command-copy"><div class="eyebrow">BIKINI BOTTOM STORAGE CREW</div><h2>Home Inventory Command Center</h2><p>Real household inventory tracking, with the Bikini Bottom crew on shift.</p></div>
+          <div class="character-lineup" aria-label="SpongeBob characters"><img src="assets/characters/sandy.png" alt="Sandy Cheeks"><img src="assets/characters/patrick.png" alt="Patrick Star"><img class="hero-sponge" src="assets/characters/spongebob.png" alt="SpongeBob SquarePants"><img src="assets/characters/squidward.png" alt="Squidward Tentacles"><img src="assets/characters/mr-krabs.png" alt="Mr. Krabs"></div>
+        </section>
         <div class="stat-grid">
-          <article class="stat-card"><div class="stat-label">ACTIVE CONTAINERS</div><div class="stat-value" id="containerCount">0</div><div class="stat-meta">tracked units</div></article>
-          <article class="stat-card"><div class="stat-label">TOTAL ITEMS</div><div class="stat-value" id="itemCount">0</div><div class="stat-meta">individual records</div></article>
-          <article class="stat-card"><div class="stat-label">LOCATIONS</div><div class="stat-value" id="locationCount">0</div><div class="stat-meta">storage zones</div></article>
-          <article class="stat-card alert-card"><div class="stat-label">NEEDS AUDIT</div><div class="stat-value" id="auditCount">0</div><div class="stat-meta">90+ days since check</div></article>
+          <article class="stat-card character-stat"><img src="assets/characters/spongebob.png" alt="" class="stat-character"><div class="stat-label">ACTIVE CONTAINERS</div><div class="stat-value" id="containerCount">0</div><div class="stat-meta">tracked units</div></article>
+          <article class="stat-card character-stat"><img src="assets/characters/mr-krabs.png" alt="" class="stat-character krabs"><div class="stat-label">TOTAL ITEMS</div><div class="stat-value" id="itemCount">0</div><div class="stat-meta">individual records</div></article>
+          <article class="stat-card character-stat"><img src="assets/characters/sandy.png" alt="" class="stat-character sandy"><div class="stat-label">LOCATIONS</div><div class="stat-value" id="locationCount">0</div><div class="stat-meta">storage zones</div></article>
+          <article class="stat-card alert-card character-stat"><img src="assets/characters/squidward.png" alt="" class="stat-character squid"><div class="stat-label">NEEDS AUDIT</div><div class="stat-value" id="auditCount">0</div><div class="stat-meta">90+ days since check</div></article>
         </div>
 
         <div class="dashboard-grid">
@@ -136,6 +140,7 @@
         </div>
       </section>
     </main>
+    <footer class="credits-strip">Character artwork © Nickelodeon / NickRewind · CC BY 3.0 · <a href="credits.html">credits</a></footer>
   </div>
 
   <div class="install-banner" id="installBanner" hidden>
@@ -186,7 +191,7 @@
       <button class="modal-close" data-close="installModal">×</button>
       <div class="eyebrow">IPHONE APP SETUP</div>
       <h2>Add to Home Screen</h2>
-      <div class="install-preview"><img src="icons/apple-touch-icon.png?v=0.6.0" alt="Bowen Inventory app icon"><div><b>Bowen Inventory</b><span>Standalone family inventory app</span></div></div>
+      <div class="install-preview"><img src="icons/apple-touch-icon.png?v=0.7.0" alt="Bowen Inventory app icon"><div><b>Bowen Inventory</b><span>Standalone family inventory app</span></div></div>
       <ol class="install-steps">
         <li>Tap the <b>Share</b> button in Safari.</li>
         <li>Scroll down and tap <b>Add to Home Screen</b>.</li>
@@ -198,7 +203,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=0.6.0"></script>
-  <script src="app.js?v=0.6.0"></script>
+  <script src="config.js?v=0.7.0"></script>
+  <script src="app.js?v=0.7.0"></script>
 </body>
 </html>

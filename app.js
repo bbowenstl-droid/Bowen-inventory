@@ -26,18 +26,18 @@ function errorMessage(err){ console.error(err); alert('MY LEG! // ' + (err?.mess
 
 
 const BB_THEMES=[
-  {name:'SpongeBob',icon:'▣',cls:'theme-sponge',tag:"I'M READY!"},
-  {name:'Patrick',icon:'★',cls:'theme-patrick',tag:'UNASSIGNED EXPERT'},
-  {name:'Squidward',icon:'♬',cls:'theme-squid',tag:'AUDIT DEPARTMENT'},
-  {name:'Gary',icon:'◉',cls:'theme-gary',tag:'MEOW // LOGISTICS'},
-  {name:'Plankton',icon:'♟',cls:'theme-plankton',tag:'TINY OPERATIONS'},
-  {name:'Mr. Krabs',icon:'¢',cls:'theme-krabs',tag:'ASSET CONTROL'}
+  {name:'SpongeBob',img:'assets/characters/spongebob.png',cls:'theme-sponge',tag:"I'M READY!"},
+  {name:'Patrick',img:'assets/characters/patrick.png',cls:'theme-patrick',tag:'ROCK SOLID STORAGE'},
+  {name:'Squidward',img:'assets/characters/squidward.png',cls:'theme-squid',tag:'AUDIT DEPARTMENT'},
+  {name:'Gary',img:'assets/characters/gary.png',cls:'theme-gary',tag:'MEOW // LOGISTICS'},
+  {name:'Mr. Krabs',img:'assets/characters/mr-krabs.png',cls:'theme-krabs',tag:'ASSET CONTROL'},
+  {name:'Sandy',img:'assets/characters/sandy.png',cls:'theme-sandy',tag:'STORAGE SCIENCE'}
 ];
 function themeFor(c){let n=[...String(c?.code||'')].reduce((a,ch)=>a+ch.charCodeAt(0),0);return BB_THEMES[n%BB_THEMES.length]}
-function emptyState(kind){const m={containers:['♟','PLANKTON REPORT','I went through all that for an empty warehouse.'],activity:['◉','GARY REPORT','Nothing to report. Meow.'],inventory:['★','PATRICK REPORT','No inventory here. This is not a tote.'],locations:['♬','SQUIDWARD REPORT','No storage zones assigned. How delightfully organized.']}[kind]||['◉','BIKINI BOTTOM OPS','Nothing here yet.'];return `<div class="empty bb-empty"><div class="bb-empty-icon">${m[0]}</div><b>${m[1]}</b><span>${m[2]}</span></div>`}
+function emptyState(kind){const m={containers:['assets/characters/patrick.png','PATRICK REPORT','No containers yet. Plenty of room under the rock.'],activity:['assets/characters/gary.png','GARY REPORT','Nothing to report. Meow.'],inventory:['assets/characters/patrick.png','PATRICK REPORT','No inventory here yet.'],locations:['assets/characters/sandy.png','SANDY REPORT','No storage zones assigned yet.']}[kind]||['assets/characters/spongebob.png','BIKINI BOTTOM OPS','Nothing here yet.'];return `<div class="empty bb-empty"><img src="${m[0]}" alt="" class="empty-character"><b>${m[1]}</b><span>${m[2]}</span></div>`}
 function scanFlash(){const el=document.createElement('div');el.className='scan-flash';el.innerHTML=`<div class="scan-flash-inner"><span>✦</span><b>I'M READY!</b><small>CONTAINER FOUND</small></div>`;document.body.appendChild(el);setTimeout(()=>el.classList.add('show'),10);setTimeout(()=>el.remove(),650)}
-function auditAgeCard(c){const d=daysSince(c.last_audited_at);if(d<90)return '';const txt=d>999?'A VERY LONG TIME LATER...':'SEVERAL MONTHS LATER...';return `<div class="time-card"><span>${txt}</span><small>THIS CONTAINER NEEDS AN AUDIT</small></div>`}
-function labelThemeMarkup(c){const t=themeFor(c);return `<div class="qr-character ${t.cls}" title="${t.name}"><span class="char-icon">${t.icon}</span><span>${t.name.toUpperCase()}</span></div><div class="label-dept">BIKINI BOTTOM STORAGE DEPT.</div>`}
+function auditAgeCard(c){const d=daysSince(c.last_audited_at);if(d<90)return '';return `<div class="audit-overdue-badge">AUDIT OVERDUE · ${Number.isFinite(d)?d+' DAYS':'NEVER AUDITED'}</div>`}
+function labelThemeMarkup(c){const t=themeFor(c);return `<div class="qr-character ${t.cls}" title="${t.name}"><img src="${t.img}" alt="${t.name}"><span>${t.name.toUpperCase()} CREW</span></div><div class="label-dept">BIKINI BOTTOM STORAGE DEPT.</div>`}
 
 async function boot(){
   showLoading(true);
@@ -134,14 +134,14 @@ async function nextCode(type){
 
 async function openContainerByCode(code){
   const c=db.containers.find(x=>x.code.toUpperCase()===String(code).toUpperCase());
-  if(!c) return alert('PLANKTON REPORT // Container not found.');
+  if(!c) return alert('Container not found.');
   scanFlash(); setTimeout(()=>openContainer(c.id),280);
 }
 
 function openContainer(id){
   const c=db.containers.find(x=>x.id===id); if(!c)return alert('Container not found.'); activeContainerId=id;
   const items=db.items.filter(i=>i.container_id===id);
-  $('#detailContent').innerHTML=`<div class="detail-top"><div><div class="detail-code">${esc(c.code)} · ${esc(c.status)}</div><div class="detail-title">${esc(c.name)}</div><div class="detail-meta">${esc(locationLabel(c))} · ${esc(c.container_type)}</div>${auditAgeCard(c)}<div class="detail-actions"><button class="btn btn-primary" id="auditBtn">♬ SQUIDWARD AUDIT MODE</button><button class="btn btn-ghost" id="printBtn">Print Character Label</button><button class="btn btn-ghost" id="deleteBtn">Delete</button></div><div class="muted">${esc(c.notes||'No notes')}</div></div><div class="qr-panel ${themeFor(c).cls}">${labelThemeMarkup(c)}<div id="qrcode"></div><div class="qr-caption">BOWEN // INVENTORY<br><strong>${esc(c.code)}</strong><br>${esc(locationLabel(c))}<br>SCAN FOR CONTENTS</div></div></div><div class="detail-section"><div class="panel-head"><div><div class="eyebrow">CONTENTS // ${themeFor(c).tag}</div><h2>${itemTotal(c)} Units</h2></div><div class="muted">Last audit: ${dateOnly(c.last_audited_at)}</div></div>${items.length?`<table class="data-table"><thead><tr><th>ITEM</th><th>QTY</th><th>CATEGORY</th><th></th></tr></thead><tbody>${items.map(i=>`<tr><td>${esc(i.name)}</td><td>${i.quantity}</td><td>${esc(i.category||'—')}</td><td><button class="text-btn remove-item" data-item-id="${esc(i.id)}">REMOVE</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty bb-empty"><div class="bb-empty-icon">♟</div><b>PLANKTON REPORT</b><span>All that planning... and this container is EMPTY.</span></div>'}<form id="addItemForm" class="item-entry item-entry-wide"><input name="name" required placeholder="Add inventory item..."><input name="qty" type="number" min="1" value="1"><input name="category" placeholder="Category (optional)"><button class="btn btn-primary">Add</button></form></div>`;
+  $('#detailContent').innerHTML=`<div class="detail-top"><div><div class="detail-code">${esc(c.code)} · ${esc(c.status)}</div><div class="detail-title">${esc(c.name)}</div><div class="detail-meta">${esc(locationLabel(c))} · ${esc(c.container_type)}</div>${auditAgeCard(c)}<div class="detail-actions"><button class="btn btn-primary" id="auditBtn">AUDIT CONTAINER</button><button class="btn btn-ghost" id="printBtn">Print Character Label</button><button class="btn btn-ghost" id="deleteBtn">Delete</button></div><div class="muted">${esc(c.notes||'No notes')}</div></div><div class="qr-panel ${themeFor(c).cls}">${labelThemeMarkup(c)}<div id="qrcode"></div><div class="qr-caption">BOWEN // INVENTORY<br><strong>${esc(c.code)}</strong><br>${esc(locationLabel(c))}<br>SCAN FOR CONTENTS</div></div></div><div class="detail-section"><div class="panel-head"><div><div class="eyebrow">CONTENTS // ${themeFor(c).tag}</div><h2>${itemTotal(c)} Units</h2></div><div class="muted">Last audit: ${dateOnly(c.last_audited_at)}</div></div>${items.length?`<table class="data-table"><thead><tr><th>ITEM</th><th>QTY</th><th>CATEGORY</th><th></th></tr></thead><tbody>${items.map(i=>`<tr><td>${esc(i.name)}</td><td>${i.quantity}</td><td>${esc(i.category||'—')}</td><td><button class="text-btn remove-item" data-item-id="${esc(i.id)}">REMOVE</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty bb-empty"><img src="assets/characters/patrick.png" alt="Patrick Star" class="empty-character"><b>NOTHING IN HERE YET</b><span>Patrick checked. Still empty.</span></div>'}<form id="addItemForm" class="item-entry item-entry-wide"><input name="name" required placeholder="Add inventory item..."><input name="qty" type="number" min="1" value="1"><input name="category" placeholder="Category (optional)"><button class="btn btn-primary">Add</button></form></div>`;
   $('#detailModal').classList.add('open');
   setTimeout(()=>{const node=$('#qrcode');node.innerHTML='';const url=`${location.origin}${location.pathname}?bin=${encodeURIComponent(c.code)}`;if(window.QRCode)new QRCode(node,{text:url,width:145,height:145});},0);
 
@@ -161,10 +161,10 @@ function openContainer(id){
   });
   $('#auditBtn').onclick=async()=>{
     showLoading(true); const now=new Date().toISOString(); const {error}=await client.from('containers').update({last_audited_at:now}).eq('id',c.id); if(error){showLoading(false);return errorMessage(error)}
-    await addLog('SQUIDWARD AUDIT COMPLETE', `${c.code} contents confirmed · reluctantly`, c.id); await loadAll(); openContainer(c.id);
+    await addLog('AUDIT COMPLETE', `${c.code} contents confirmed`, c.id); await loadAll(); openContainer(c.id);
   };
   $('#deleteBtn').onclick=async()=>{
-    if(!confirm(`PLANKTON HAS THE DELETE BUTTON.\n\nDelete ${c.code} and all items inside it?`))return;
+    if(!confirm(`Delete ${c.code} and all items inside it?`))return;
     showLoading(true); const code=c.code; const {error}=await client.from('containers').delete().eq('id',c.id); if(error){showLoading(false);return errorMessage(error)}
     await addLog('CONTAINER DELETED', `${code} deleted`); $('#detailModal').classList.remove('open'); await loadAll();
   };
