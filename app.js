@@ -17,34 +17,60 @@ const locationLabel = c => {
   const loc = locationFor(c)?.name || 'Unassigned';
   return c.storage_position ? `${loc} / ${c.storage_position}` : loc;
 };
-const daysSince = iso => iso ? Math.floor((Date.now()-new Date(iso).getTime())/86400000) : 99999;
+const daysSince = iso => { if(!iso) return null; const t=new Date(iso).getTime(); return Number.isFinite(t) ? Math.max(0, Math.floor((Date.now()-t)/86400000)) : null; };
 
 function showLoading(on=true){ $('#loadingScreen').classList.toggle('show', on); if(on){ const t=$('#loadingText'); if(t)t.textContent=['MEOW... RETRIEVING INVENTORY','JELLYFISHING FOR RECORDS...','ORDER UP... LOADING STOCK','BIKINI BOTTOM WAREHOUSE ONLINE...'][Math.floor(Math.random()*4)]; } }
 function showAuth(){ $('#authScreen').classList.add('show'); $('#appShell').classList.add('app-hidden'); }
 function showApp(){ $('#authScreen').classList.remove('show'); $('#appShell').classList.remove('app-hidden'); }
-function errorMessage(err){ console.error(err); alert('MY LEG! // ' + (err?.message || 'Something went wrong.')); }
+function isAuthSessionError(err){
+  const msg=String(err?.message||err||'').toLowerCase();
+  return msg.includes('jwt issued at future') || msg.includes('jwt expired') || msg.includes('invalid jwt') || msg.includes('refresh token') || msg.includes('session_not_found');
+}
+async function recoverAuthSession(err){
+  if(!isAuthSessionError(err)) return false;
+  console.warn('Clearing invalid auth session:', err?.message||err);
+  try{ await client.auth.signOut({scope:'local'}); }catch(e){ console.warn('Local sign out failed:', e); }
+  sessionUser=null;
+  db={locations:[],containers:[],items:[],activity:[]};
+  showLoading(false);
+  showAuth();
+  const box=$('#authError');
+  if(box) box.textContent='Your saved login expired or became invalid. Please sign in again.';
+  return true;
+}
+async function errorMessage(err){
+  console.error(err);
+  if(await recoverAuthSession(err)) return;
+  alert('MY LEG! // ' + (err?.message || 'Something went wrong.'));
+}
 
 
 const BB_THEMES=[
-  {name:'SpongeBob',img:'assets/characters/spongebob.png',cls:'theme-sponge',tag:"I'M READY!"},
-  {name:'Patrick',img:'assets/characters/patrick.png',cls:'theme-patrick',tag:'ROCK SOLID STORAGE'},
-  {name:'Squidward',img:'assets/characters/squidward.png',cls:'theme-squid',tag:'AUDIT DEPARTMENT'},
-  {name:'Gary',img:'assets/characters/gary.png',cls:'theme-gary',tag:'MEOW // LOGISTICS'},
-  {name:'Mr. Krabs',img:'assets/characters/mr-krabs.png',cls:'theme-krabs',tag:'ASSET CONTROL'},
-  {name:'Sandy',img:'assets/characters/sandy.png',cls:'theme-sandy',tag:'STORAGE SCIENCE'}
+  {name:'SpongeBob',img:'spongebob.png',cls:'theme-sponge',tag:"I'M READY!"},
+  {name:'Patrick',img:'patrick.png',cls:'theme-patrick',tag:'ROCK SOLID STORAGE'},
+  {name:'Squidward',img:'squidward.png',cls:'theme-squid',tag:'AUDIT DEPARTMENT'},
+  {name:'Gary',img:'gary.png',cls:'theme-gary',tag:'MEOW // LOGISTICS'},
+  {name:'Mr. Krabs',img:'mr-krabs.png',cls:'theme-krabs',tag:'ASSET CONTROL'},
+  {name:'Sandy',img:'sandy.png',cls:'theme-sandy',tag:'STORAGE SCIENCE'}
 ];
 function themeFor(c){let n=[...String(c?.code||'')].reduce((a,ch)=>a+ch.charCodeAt(0),0);return BB_THEMES[n%BB_THEMES.length]}
-function emptyState(kind){const m={containers:['assets/characters/patrick.png','PATRICK REPORT','No containers yet. Plenty of room under the rock.'],activity:['assets/characters/gary.png','GARY REPORT','Nothing to report. Meow.'],inventory:['assets/characters/patrick.png','PATRICK REPORT','No inventory here yet.'],locations:['assets/characters/sandy.png','SANDY REPORT','No storage zones assigned yet.']}[kind]||['assets/characters/spongebob.png','BIKINI BOTTOM OPS','Nothing here yet.'];return `<div class="empty bb-empty"><img src="${m[0]}" alt="" class="empty-character"><b>${m[1]}</b><span>${m[2]}</span></div>`}
+function emptyState(kind){const m={containers:['patrick.png','PATRICK REPORT','No containers yet. Plenty of room under the rock.'],activity:['gary.png','GARY REPORT','Nothing to report. Meow.'],inventory:['patrick.png','PATRICK REPORT','No inventory here yet.'],locations:['sandy.png','SANDY REPORT','No storage zones assigned yet.']}[kind]||['spongebob.png','BIKINI BOTTOM OPS','Nothing here yet.'];return `<div class="empty bb-empty"><img src="${m[0]}" alt="" class="empty-character"><b>${m[1]}</b><span>${m[2]}</span></div>`}
 function scanFlash(){const el=document.createElement('div');el.className='scan-flash';el.innerHTML=`<div class="scan-flash-inner"><span>✦</span><b>I'M READY!</b><small>CONTAINER FOUND</small></div>`;document.body.appendChild(el);setTimeout(()=>el.classList.add('show'),10);setTimeout(()=>el.remove(),650)}
-function auditAgeCard(c){const d=daysSince(c.last_audited_at);if(d<90)return '';return `<div class="audit-overdue-badge">AUDIT OVERDUE · ${Number.isFinite(d)?d+' DAYS':'NEVER AUDITED'}</div>`}
+function auditAgeCard(c){const d=daysSince(c.last_audited_at);if(d===null)return `<div class="audit-overdue-badge">AUDIT NEEDED · NEVER AUDITED</div>`;if(d<90)return '';return `<div class="audit-overdue-badge">AUDIT OVERDUE · ${d} DAYS</div>`}
 function labelThemeMarkup(c){const t=themeFor(c);return `<div class="qr-character ${t.cls}" title="${t.name}"><img src="${t.img}" alt="${t.name}"><span>${t.name.toUpperCase()} CREW</span></div><div class="label-dept">BIKINI BOTTOM STORAGE DEPT.</div>`}
 
 async function boot(){
   showLoading(true);
-  const { data: { session } } = await client.auth.getSession();
-  sessionUser = session?.user || null;
-  if (!sessionUser){ showLoading(false); showAuth(); return; }
-  await enterApp();
+  try{
+    const { data: { session }, error } = await client.auth.getSession();
+    if(error){ if(await recoverAuthSession(error)) return; throw error; }
+    sessionUser = session?.user || null;
+    if (!sessionUser){ showLoading(false); showAuth(); return; }
+    await enterApp();
+  }catch(err){
+    showLoading(false);
+    if(!(await recoverAuthSession(err))) errorMessage(err);
+  }
 }
 
 async function enterApp(){
@@ -65,7 +91,7 @@ async function loadAll(){
     client.from('activity_log').select('*').order('created_at', {ascending:false}).limit(500)
   ]);
   const problem = [locationsRes, containersRes, itemsRes, activityRes].find(r=>r.error)?.error;
-  if(problem){ showLoading(false); errorMessage(problem); return; }
+  if(problem){ showLoading(false); await errorMessage(problem); return; }
   db.locations = locationsRes.data || [];
   db.containers = containersRes.data || [];
   db.items = itemsRes.data || [];
@@ -86,7 +112,7 @@ function render(){
   $('#containerCount').textContent = db.containers.filter(c=>c.status==='ACTIVE').length;
   $('#itemCount').textContent = db.items.reduce((n,i)=>n+Number(i.quantity||0),0);
   $('#locationCount').textContent = db.locations.length;
-  $('#auditCount').textContent = db.containers.filter(c=>!c.last_audited_at || daysSince(c.last_audited_at)>90).length;
+  $('#auditCount').textContent = db.containers.filter(c=>{const d=daysSince(c.last_audited_at);return d===null || d>90;}).length;
   $('#recentContainers').innerHTML = db.containers.slice(0,5).map(containerRow).join('') || emptyState('containers');
   $('#recentActivity').innerHTML = db.activity.slice(0,6).map(activityRow).join('') || emptyState('activity');
   $('#activityFull').innerHTML = db.activity.map(activityRow).join('') || emptyState('activity');
@@ -141,7 +167,7 @@ async function openContainerByCode(code){
 function openContainer(id){
   const c=db.containers.find(x=>x.id===id); if(!c)return alert('Container not found.'); activeContainerId=id;
   const items=db.items.filter(i=>i.container_id===id);
-  $('#detailContent').innerHTML=`<div class="detail-top"><div><div class="detail-code">${esc(c.code)} · ${esc(c.status)}</div><div class="detail-title">${esc(c.name)}</div><div class="detail-meta">${esc(locationLabel(c))} · ${esc(c.container_type)}</div>${auditAgeCard(c)}<div class="detail-actions"><button class="btn btn-primary" id="auditBtn">AUDIT CONTAINER</button><button class="btn btn-ghost" id="printBtn">Print Character Label</button><button class="btn btn-ghost" id="deleteBtn">Delete</button></div><div class="muted">${esc(c.notes||'No notes')}</div></div><div class="qr-panel ${themeFor(c).cls}">${labelThemeMarkup(c)}<div id="qrcode"></div><div class="qr-caption">BOWEN // INVENTORY<br><strong>${esc(c.code)}</strong><br>${esc(locationLabel(c))}<br>SCAN FOR CONTENTS</div></div></div><div class="detail-section"><div class="panel-head"><div><div class="eyebrow">CONTENTS // ${themeFor(c).tag}</div><h2>${itemTotal(c)} Units</h2></div><div class="muted">Last audit: ${dateOnly(c.last_audited_at)}</div></div>${items.length?`<table class="data-table"><thead><tr><th>ITEM</th><th>QTY</th><th>CATEGORY</th><th></th></tr></thead><tbody>${items.map(i=>`<tr><td>${esc(i.name)}</td><td>${i.quantity}</td><td>${esc(i.category||'—')}</td><td><button class="text-btn remove-item" data-item-id="${esc(i.id)}">REMOVE</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty bb-empty"><img src="assets/characters/patrick.png" alt="Patrick Star" class="empty-character"><b>NOTHING IN HERE YET</b><span>Patrick checked. Still empty.</span></div>'}<form id="addItemForm" class="item-entry item-entry-wide"><input name="name" required placeholder="Add inventory item..."><input name="qty" type="number" min="1" value="1"><input name="category" placeholder="Category (optional)"><button class="btn btn-primary">Add</button></form></div>`;
+  $('#detailContent').innerHTML=`<div class="detail-top"><div><div class="detail-code">${esc(c.code)} · ${esc(c.status)}</div><div class="detail-title">${esc(c.name)}</div><div class="detail-meta">${esc(locationLabel(c))} · ${esc(c.container_type)}</div>${auditAgeCard(c)}<div class="detail-actions"><button class="btn btn-primary" id="auditBtn">AUDIT CONTAINER</button><button class="btn btn-ghost" id="printBtn">Print Character Label</button><button class="btn btn-ghost" id="deleteBtn">Delete</button></div><div class="muted">${esc(c.notes||'No notes')}</div></div><div class="qr-panel ${themeFor(c).cls}">${labelThemeMarkup(c)}<div id="qrcode"></div><div class="qr-caption">BOWEN // INVENTORY<br><strong>${esc(c.code)}</strong><br>${esc(locationLabel(c))}<br>SCAN FOR CONTENTS</div></div></div><div class="detail-section"><div class="panel-head"><div><div class="eyebrow">CONTENTS // ${themeFor(c).tag}</div><h2>${itemTotal(c)} Units</h2></div><div class="muted">Last audit: ${dateOnly(c.last_audited_at)}</div></div>${items.length?`<table class="data-table"><thead><tr><th>ITEM</th><th>QTY</th><th>CATEGORY</th><th></th></tr></thead><tbody>${items.map(i=>`<tr><td>${esc(i.name)}</td><td>${i.quantity}</td><td>${esc(i.category||'—')}</td><td><button class="text-btn remove-item" data-item-id="${esc(i.id)}">REMOVE</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty bb-empty"><img src="patrick.png" alt="Patrick Star" class="empty-character"><b>NOTHING IN HERE YET</b><span>Patrick checked. Still empty.</span></div>'}<form id="addItemForm" class="item-entry item-entry-wide"><input name="name" required placeholder="Add inventory item..."><input name="qty" type="number" min="1" value="1"><input name="category" placeholder="Category (optional)"><button class="btn btn-primary">Add</button></form></div>`;
   $('#detailModal').classList.add('open');
   setTimeout(()=>{const node=$('#qrcode');node.innerHTML='';const url=`${location.origin}${location.pathname}?bin=${encodeURIComponent(c.code)}`;if(window.QRCode)new QRCode(node,{text:url,width:145,height:145});},0);
 
@@ -186,7 +212,7 @@ $('#loginForm').onsubmit=async e=>{
   sessionUser=data.user; await enterApp();
 };
 
-$('#signOutBtn').onclick=async()=>{await client.auth.signOut();sessionUser=null;db={locations:[],containers:[],items:[],activity:[]};showAuth();};
+$('#signOutBtn').onclick=async()=>{await client.auth.signOut({scope:'local'});sessionUser=null;db={locations:[],containers:[],items:[],activity:[]};showAuth();};
 $$('.nav-item').forEach(btn=>btn.onclick=()=>switchView(btn.dataset.view));
 $$('[data-viewjump]').forEach(btn=>btn.onclick=()=>switchView(btn.dataset.viewjump));
 $('#newContainerBtn').onclick=()=>{$('#containerModal').classList.add('open');populateLocationSelect();};

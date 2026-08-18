@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bowen-inventory-v0.7.0';
+const CACHE_NAME = 'bowen-inventory-v0.8.0';
 const APP_SHELL = [
   './',
   './index.html',
@@ -10,12 +10,12 @@ const APP_SHELL = [
   './icons/icon-192.png?v=0.7.0',
   './icons/icon-512.png?v=0.7.0',
   './credits.html',
-  './assets/characters/spongebob.png',
-  './assets/characters/patrick.png',
-  './assets/characters/squidward.png',
-  './assets/characters/gary.png',
-  './assets/characters/mr-krabs.png',
-  './assets/characters/sandy.png',
+  './spongebob.png',
+  './patrick.png',
+  './squidward.png',
+  './gary.png',
+  './mr-krabs.png',
+  './sandy.png',
 ];
 
 self.addEventListener('install', event => {
