@@ -19,10 +19,25 @@ const locationLabel = c => {
 };
 const daysSince = iso => iso ? Math.floor((Date.now()-new Date(iso).getTime())/86400000) : 99999;
 
-function showLoading(on=true){ $('#loadingScreen').classList.toggle('show', on); }
+function showLoading(on=true){ $('#loadingScreen').classList.toggle('show', on); if(on){ const t=$('#loadingText'); if(t)t.textContent=['MEOW... RETRIEVING INVENTORY','JELLYFISHING FOR RECORDS...','ORDER UP... LOADING STOCK','BIKINI BOTTOM WAREHOUSE ONLINE...'][Math.floor(Math.random()*4)]; } }
 function showAuth(){ $('#authScreen').classList.add('show'); $('#appShell').classList.add('app-hidden'); }
 function showApp(){ $('#authScreen').classList.remove('show'); $('#appShell').classList.remove('app-hidden'); }
-function errorMessage(err){ console.error(err); alert(err?.message || 'Something went wrong.'); }
+function errorMessage(err){ console.error(err); alert('MY LEG! // ' + (err?.message || 'Something went wrong.')); }
+
+
+const BB_THEMES=[
+  {name:'SpongeBob',icon:'▣',cls:'theme-sponge',tag:"I'M READY!"},
+  {name:'Patrick',icon:'★',cls:'theme-patrick',tag:'UNASSIGNED EXPERT'},
+  {name:'Squidward',icon:'♬',cls:'theme-squid',tag:'AUDIT DEPARTMENT'},
+  {name:'Gary',icon:'◉',cls:'theme-gary',tag:'MEOW // LOGISTICS'},
+  {name:'Plankton',icon:'♟',cls:'theme-plankton',tag:'TINY OPERATIONS'},
+  {name:'Mr. Krabs',icon:'¢',cls:'theme-krabs',tag:'ASSET CONTROL'}
+];
+function themeFor(c){let n=[...String(c?.code||'')].reduce((a,ch)=>a+ch.charCodeAt(0),0);return BB_THEMES[n%BB_THEMES.length]}
+function emptyState(kind){const m={containers:['♟','PLANKTON REPORT','I went through all that for an empty warehouse.'],activity:['◉','GARY REPORT','Nothing to report. Meow.'],inventory:['★','PATRICK REPORT','No inventory here. This is not a tote.'],locations:['♬','SQUIDWARD REPORT','No storage zones assigned. How delightfully organized.']}[kind]||['◉','BIKINI BOTTOM OPS','Nothing here yet.'];return `<div class="empty bb-empty"><div class="bb-empty-icon">${m[0]}</div><b>${m[1]}</b><span>${m[2]}</span></div>`}
+function scanFlash(){const el=document.createElement('div');el.className='scan-flash';el.innerHTML=`<div class="scan-flash-inner"><span>✦</span><b>I'M READY!</b><small>CONTAINER FOUND</small></div>`;document.body.appendChild(el);setTimeout(()=>el.classList.add('show'),10);setTimeout(()=>el.remove(),650)}
+function auditAgeCard(c){const d=daysSince(c.last_audited_at);if(d<90)return '';const txt=d>999?'A VERY LONG TIME LATER...':'SEVERAL MONTHS LATER...';return `<div class="time-card"><span>${txt}</span><small>THIS CONTAINER NEEDS AN AUDIT</small></div>`}
+function labelThemeMarkup(c){const t=themeFor(c);return `<div class="qr-character ${t.cls}" title="${t.name}"><span class="char-icon">${t.icon}</span><span>${t.name.toUpperCase()}</span></div><div class="label-dept">BIKINI BOTTOM STORAGE DEPT.</div>`}
 
 async function boot(){
   showLoading(true);
@@ -72,9 +87,9 @@ function render(){
   $('#itemCount').textContent = db.items.reduce((n,i)=>n+Number(i.quantity||0),0);
   $('#locationCount').textContent = db.locations.length;
   $('#auditCount').textContent = db.containers.filter(c=>!c.last_audited_at || daysSince(c.last_audited_at)>90).length;
-  $('#recentContainers').innerHTML = db.containers.slice(0,5).map(containerRow).join('') || '<div class="empty">No containers yet.</div>';
-  $('#recentActivity').innerHTML = db.activity.slice(0,6).map(activityRow).join('') || '<div class="empty">No activity yet.</div>';
-  $('#activityFull').innerHTML = db.activity.map(activityRow).join('') || '<div class="empty">No activity yet.</div>';
+  $('#recentContainers').innerHTML = db.containers.slice(0,5).map(containerRow).join('') || emptyState('containers');
+  $('#recentActivity').innerHTML = db.activity.slice(0,6).map(activityRow).join('') || emptyState('activity');
+  $('#activityFull').innerHTML = db.activity.map(activityRow).join('') || emptyState('activity');
   renderContainerTable(); renderInventoryTable(); renderLocations(); renderFilters(); populateLocationSelect(); bindRows();
 }
 
@@ -97,7 +112,7 @@ function renderLocations(){
     const containers=db.containers.filter(c=>c.location_id===loc.id);
     const units=containers.reduce((n,c)=>n+itemTotal(c),0);
     return `<div class="location-card"><div class="eyebrow">${esc(loc.code||'STORAGE ZONE')}</div><div class="big">${esc(loc.name)}</div><div class="muted">${containers.length} containers · ${units} units</div>${loc.description?`<div class="subtext location-desc">${esc(loc.description)}</div>`:''}</div>`
-  }).join('') || '<div class="empty">No locations yet.</div>';
+  }).join('') || emptyState('locations');
 }
 
 function renderFilters(){
@@ -119,14 +134,14 @@ async function nextCode(type){
 
 async function openContainerByCode(code){
   const c=db.containers.find(x=>x.code.toUpperCase()===String(code).toUpperCase());
-  if(!c) return alert('Container not found.');
-  openContainer(c.id);
+  if(!c) return alert('PLANKTON REPORT // Container not found.');
+  scanFlash(); setTimeout(()=>openContainer(c.id),280);
 }
 
 function openContainer(id){
   const c=db.containers.find(x=>x.id===id); if(!c)return alert('Container not found.'); activeContainerId=id;
   const items=db.items.filter(i=>i.container_id===id);
-  $('#detailContent').innerHTML=`<div class="detail-top"><div><div class="detail-code">${esc(c.code)} · ${esc(c.status)}</div><div class="detail-title">${esc(c.name)}</div><div class="detail-meta">${esc(locationLabel(c))} · ${esc(c.container_type)}</div><div class="detail-actions"><button class="btn btn-primary" id="auditBtn">✓ Audit Container</button><button class="btn btn-ghost" id="printBtn">Print Label</button><button class="btn btn-ghost" id="deleteBtn">Delete</button></div><div class="muted">${esc(c.notes||'No notes')}</div></div><div class="qr-panel"><div id="qrcode"></div><div class="qr-caption">BOWEN INVENTORY<br>${esc(c.code)}<br>SCAN FOR CONTENTS</div></div></div><div class="detail-section"><div class="panel-head"><div><div class="eyebrow">CONTENTS</div><h2>${itemTotal(c)} Units</h2></div><div class="muted">Last audit: ${dateOnly(c.last_audited_at)}</div></div>${items.length?`<table class="data-table"><thead><tr><th>ITEM</th><th>QTY</th><th>CATEGORY</th><th></th></tr></thead><tbody>${items.map(i=>`<tr><td>${esc(i.name)}</td><td>${i.quantity}</td><td>${esc(i.category||'—')}</td><td><button class="text-btn remove-item" data-item-id="${esc(i.id)}">REMOVE</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty">This container is empty. Orderly, orderly, orderly.</div>'}<form id="addItemForm" class="item-entry item-entry-wide"><input name="name" required placeholder="Add inventory item..."><input name="qty" type="number" min="1" value="1"><input name="category" placeholder="Category (optional)"><button class="btn btn-primary">Add</button></form></div>`;
+  $('#detailContent').innerHTML=`<div class="detail-top"><div><div class="detail-code">${esc(c.code)} · ${esc(c.status)}</div><div class="detail-title">${esc(c.name)}</div><div class="detail-meta">${esc(locationLabel(c))} · ${esc(c.container_type)}</div>${auditAgeCard(c)}<div class="detail-actions"><button class="btn btn-primary" id="auditBtn">♬ SQUIDWARD AUDIT MODE</button><button class="btn btn-ghost" id="printBtn">Print Character Label</button><button class="btn btn-ghost" id="deleteBtn">Delete</button></div><div class="muted">${esc(c.notes||'No notes')}</div></div><div class="qr-panel ${themeFor(c).cls}">${labelThemeMarkup(c)}<div id="qrcode"></div><div class="qr-caption">BOWEN // INVENTORY<br><strong>${esc(c.code)}</strong><br>${esc(locationLabel(c))}<br>SCAN FOR CONTENTS</div></div></div><div class="detail-section"><div class="panel-head"><div><div class="eyebrow">CONTENTS // ${themeFor(c).tag}</div><h2>${itemTotal(c)} Units</h2></div><div class="muted">Last audit: ${dateOnly(c.last_audited_at)}</div></div>${items.length?`<table class="data-table"><thead><tr><th>ITEM</th><th>QTY</th><th>CATEGORY</th><th></th></tr></thead><tbody>${items.map(i=>`<tr><td>${esc(i.name)}</td><td>${i.quantity}</td><td>${esc(i.category||'—')}</td><td><button class="text-btn remove-item" data-item-id="${esc(i.id)}">REMOVE</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty bb-empty"><div class="bb-empty-icon">♟</div><b>PLANKTON REPORT</b><span>All that planning... and this container is EMPTY.</span></div>'}<form id="addItemForm" class="item-entry item-entry-wide"><input name="name" required placeholder="Add inventory item..."><input name="qty" type="number" min="1" value="1"><input name="category" placeholder="Category (optional)"><button class="btn btn-primary">Add</button></form></div>`;
   $('#detailModal').classList.add('open');
   setTimeout(()=>{const node=$('#qrcode');node.innerHTML='';const url=`${location.origin}${location.pathname}?bin=${encodeURIComponent(c.code)}`;if(window.QRCode)new QRCode(node,{text:url,width:145,height:145});},0);
 
@@ -146,10 +161,10 @@ function openContainer(id){
   });
   $('#auditBtn').onclick=async()=>{
     showLoading(true); const now=new Date().toISOString(); const {error}=await client.from('containers').update({last_audited_at:now}).eq('id',c.id); if(error){showLoading(false);return errorMessage(error)}
-    await addLog('AUDIT COMPLETE', `${c.code} contents confirmed`, c.id); await loadAll(); openContainer(c.id);
+    await addLog('SQUIDWARD AUDIT COMPLETE', `${c.code} contents confirmed · reluctantly`, c.id); await loadAll(); openContainer(c.id);
   };
   $('#deleteBtn').onclick=async()=>{
-    if(!confirm(`Delete ${c.code} and all items inside it?`))return;
+    if(!confirm(`PLANKTON HAS THE DELETE BUTTON.\n\nDelete ${c.code} and all items inside it?`))return;
     showLoading(true); const code=c.code; const {error}=await client.from('containers').delete().eq('id',c.id); if(error){showLoading(false);return errorMessage(error)}
     await addLog('CONTAINER DELETED', `${code} deleted`); $('#detailModal').classList.remove('open'); await loadAll();
   };
@@ -229,6 +244,7 @@ $('#globalSearch').addEventListener('input',e=>{
 document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap')&&!e.target.closest('.search-results'))searchBox.classList.remove('open')});
 document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#globalSearch').focus()}if(e.key==='Escape')$$('.modal-backdrop').forEach(m=>m.classList.remove('open'))});
 client.auth.onAuthStateChange((_event,session)=>{sessionUser=session?.user||null;});
+let logoTaps=0,logoTimer=null;document.querySelector('.brand-block')?.addEventListener('click',()=>{logoTaps++;clearTimeout(logoTimer);logoTimer=setTimeout(()=>logoTaps=0,1600);if(logoTaps>=5){document.body.classList.toggle('bikini-mode');logoTaps=0;const n=document.createElement('div');n.className='secret-toast';n.textContent=document.body.classList.contains('bikini-mode')?'SECRET BIKINI BOTTOM MODE // ACTIVATED':'WAREHOUSE MODE // RESTORED';document.body.appendChild(n);setTimeout(()=>n.remove(),2200);}});
 boot();
 
 // ============================================================

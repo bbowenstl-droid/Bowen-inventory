@@ -35,6 +35,10 @@ Upload/replace these files in the repository root:
 `config.js` contains only the Supabase Project URL and publishable frontend key. This key is designed to be used in browser applications. Database protection comes from the Row Level Security policies configured in Supabase. Never put a Supabase secret/service-role key or database password in this repository.
 
 
-## v0.5 App Edition
+## v0.6 Bikini Bottom Ops Edition
 
 This release adds installable PWA support. Upload `manifest.webmanifest`, `sw.js`, and the entire `icons` folder along with the existing site files. On iPhone, open the site in Safari, tap the in-app **Install** prompt, then use **Share → Add to Home Screen**. The app launches in standalone mode from the Home Screen.
+
+
+## v0.6 Easter eggs
+Character-themed QR labels, Gary loading animation, Squidward Audit Mode, Plankton empty/delete states, SpongeBob scan flash, time-card audit warnings, themed system messages, and a secret five-tap Bikini Bottom mode. QR modules remain standard for reliable scanning.
