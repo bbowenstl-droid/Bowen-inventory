@@ -57,7 +57,8 @@ function themeFor(c){let n=[...String(c?.code||'')].reduce((a,ch)=>a+ch.charCode
 function emptyState(kind){const m={containers:['patrick.png','PATRICK REPORT','No containers yet. Plenty of room under the rock.'],activity:['gary.png','GARY REPORT','Nothing to report. Meow.'],inventory:['patrick.png','PATRICK REPORT','No inventory here yet.'],locations:['sandy.png','SANDY REPORT','No storage zones assigned yet.']}[kind]||['spongebob.png','BIKINI BOTTOM OPS','Nothing here yet.'];return `<div class="empty bb-empty"><img src="${m[0]}" alt="" class="empty-character"><b>${m[1]}</b><span>${m[2]}</span></div>`}
 function scanFlash(){const el=document.createElement('div');el.className='scan-flash';el.innerHTML=`<div class="scan-flash-inner"><span>✦</span><b>I'M READY!</b><small>CONTAINER FOUND</small></div>`;document.body.appendChild(el);setTimeout(()=>el.classList.add('show'),10);setTimeout(()=>el.remove(),650)}
 function auditAgeCard(c){const d=daysSince(c.last_audited_at);if(d===null)return `<div class="audit-overdue-badge">AUDIT NEEDED · NEVER AUDITED</div>`;if(d<90)return '';return `<div class="audit-overdue-badge">AUDIT OVERDUE · ${d} DAYS</div>`}
-function labelThemeMarkup(c){const t=themeFor(c);return `<div class="qr-character ${t.cls}" title="${t.name}"><img src="${t.img}" alt="${t.name}"><span>${t.name.toUpperCase()} CREW</span></div><div class="label-dept">BIKINI BOTTOM STORAGE DEPT.</div>`}
+function characterUrl(file){ return new URL(file, window.location.href).href; }
+function labelThemeMarkup(c){const t=themeFor(c);const img=characterUrl(t.img);return `<div class="qr-character ${t.cls}" title="${t.name}" style="--crew-image:url('${img}')"><span>${t.name.toUpperCase()} CREW</span></div><div class="label-dept">BIKINI BOTTOM STORAGE DEPT.</div>`}
 
 async function boot(){
   showLoading(true);

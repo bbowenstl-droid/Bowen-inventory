@@ -1,14 +1,14 @@
-const CACHE_NAME = 'bowen-inventory-v0.8.0';
+const CACHE_NAME = 'bowen-inventory-v0.9.0';
 const APP_SHELL = [
   './',
   './index.html',
-  './styles.css?v=0.7.0',
-  './app.js?v=0.7.0',
-  './config.js?v=0.7.0',
-  './manifest.webmanifest?v=0.7.0',
-  './icons/apple-touch-icon.png?v=0.7.0',
-  './icons/icon-192.png?v=0.7.0',
-  './icons/icon-512.png?v=0.7.0',
+  './styles.css?v=0.9.0',
+  './app.js?v=0.9.0',
+  './config.js?v=0.9.0',
+  './manifest.webmanifest?v=0.9.0',
+  './icons/apple-touch-icon.png?v=0.9.0',
+  './icons/icon-192.png?v=0.9.0',
+  './icons/icon-512.png?v=0.9.0',
   './credits.html',
   './spongebob.png',
   './patrick.png',

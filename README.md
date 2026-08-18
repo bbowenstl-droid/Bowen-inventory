@@ -43,9 +43,13 @@ This release adds installable PWA support. Upload `manifest.webmanifest`, `sw.js
 ## v0.6 Easter eggs
 Character-themed QR labels, Gary loading animation, Squidward Audit Mode, Plankton empty/delete states, SpongeBob scan flash, time-card audit warnings, themed system messages, and a secret five-tap Bikini Bottom mode. QR modules remain standard for reliable scanning.
 
-## v0.8 Character Crew
+## v0.9 Character Crew
 This build integrates actual character artwork for SpongeBob, Patrick, Squidward, Gary, Mr. Krabs, and Sandy throughout the dashboard, loading states, audit UI, empty states, and QR labels. Artwork credits are included in `credits.html` and use the CC BY 3.0 sources documented there.
 
 
-## v0.8 patch
+## v0.9 patch
 Character PNG files now live at the repository root to match the current GitHub upload layout. This build also fixes never-audited containers showing 99999 days and automatically clears invalid/stale Supabase sessions so users can sign back in cleanly.
+
+
+## v0.9
+QR character labels now render crew artwork as a CSS background overlay using an absolute URL, avoiding broken inline image icons while preserving printability.
